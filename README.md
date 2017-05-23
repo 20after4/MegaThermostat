@@ -4,12 +4,12 @@ This arduino sketch implements a basic home thermostat controller which connects
 
 ## Hardware:
 
-* Arduino Mega2560
-* BMP180 berometric pressure + temperature sensor: https://www.adafruit.com/product/1603
-* DHT22 Temperature + Humidity sensor
-* NRF20L01+ radio for remote control
+* [Arduino Mega2560](https://www.arduino.cc/en/main/arduinoBoardMega2560)
+* [BMP180](https://www.adafruit.com/product/1603) Berometric pressure + Temperature sensor
+* [DHT22](https://learn.adafruit.com/dht/overview) Temperature + Humidity sensor
+* [NRF20L01+ radio module](https://www.amazon.com/Makerfocus-Wireless-NRF24L01-Antistatic-Compatible/dp/B01IK78PQA/) for Remote Control & Monitoring.
 * Generic 4 channel relay module
-* Generic 16x2 LCD + Keypad shield.
+* Generic 16x2 LCD + Keypad shield
 
 ## Libraries:
 
