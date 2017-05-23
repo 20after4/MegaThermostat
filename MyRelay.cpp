@@ -6,7 +6,7 @@
 
 
 
-Relay::Relay(uint8_t pin, String a_name, float setpoint_on, float setpoint_off)
+Relay::Relay(uint8_t pin, uint8_t sensor_num, String a_name, float setpoint_on, float setpoint_off)
   :IODevice(pin) {
   _pin = pin;
   digitalWrite(_pin, OFF);
@@ -16,7 +16,7 @@ Relay::Relay(uint8_t pin, String a_name, float setpoint_on, float setpoint_off)
   _setpoint_on = setpoint_on;
   _setpoint_off = setpoint_off;
 
-  MyMessage my_message(_pin, V_STATUS);
+  MyMessage my_message(sensor_num, V_STATUS);
   msgClass = my_message;
 }
 
@@ -58,7 +58,13 @@ void Relay::refresh(float temperature) {
   if (holdUntil > ts) {
     return;
   }
-  unsigned int secondsSinceLastChange = ts - lastChange / 1000;
+  unsigned int secondsSinceLastChange = (ts - lastChange) / 1000;
+
+  if (state == ON && secondsSinceLastChange > maxRunTime) {
+    forceState(OFF);
+    pendingState = -1;
+    return;
+  }
 
   if (pendingState == ON && secondsSinceLastChange < delayBeforeRestart) {
     return;
@@ -69,19 +75,19 @@ void Relay::refresh(float temperature) {
   if (pendingState > -1 && pendingState != state) {
     forceState(pendingState);
     pendingState = -1;
-  } else if (_setpoint_on > _setpoint_off) {
+  } else if (_setpoint_on > 0 && _setpoint_on > _setpoint_off) {
     if (temperature > _setpoint_off && temperature >= _setpoint_on) {
       run();
     } else if (temperature <= _setpoint_off) {
       stop();
     }
-  } else if (_setpoint_on < _setpoint_off) {
+  } else if (_setpoint_on > 0 && _setpoint_on < _setpoint_off) {
     if (temperature >= _setpoint_off) {
       stop();
     } else if (temperature <= _setpoint_on) {
       run();
     }
-  } else {
+  } else if (_setpoint_on > 0) {
     stop();
   }
 }

@@ -4,8 +4,9 @@
 
 #include <Arduino.h>
 #include "config.h"
-#include <core/MySensorsCore.h>
-#include <core/MyHwAVR.h>
+#include <MySensors.h>
+//#include <core/MySensorsCore.h>
+//#include <core/MyHwAVR.h>
 #include "globals.h"
 
 class IODevice {
@@ -37,6 +38,8 @@ class Relay: public IODevice {
   public:
     unsigned long holdUntil = 0;
     unsigned long lastChange = 0;
+    int maxRunTime = MAX_RUNTIME;
+    int minRunTime = MIN_RUNTIME;
     String name;
     uint8_t state = OFF;
     int8_t pendingState = -1;
@@ -48,7 +51,7 @@ class Relay: public IODevice {
     float _temperature;
     uint8_t runMode = MODE_AUTO;
 
-    Relay(uint8_t pin, String a_name, float setpoint_on,
+    Relay(uint8_t pin, uint8_t sensor_num, String a_name, float setpoint_on,
          float setpoint_off);
     void refresh(float temperature);
     void setState(uint8_t state) { pendingState = state; }
@@ -75,12 +78,16 @@ class Relay: public IODevice {
     void onLoop();
     void onReceive(const MyMessage & message);
     void run() {
-      if (fanRelay->runMode == MODE_OFF || runMode == MODE_OFF) {
+      if (runMode == MODE_OFF)
         return;
-      }
+      if (fanRelay != NULL && fanRelay->runMode == MODE_OFF)
+        return;
+
       setState(ON);
-      fanRelay->setState(ON);
-      fanRelay->holdStateUntil(millis());
+      if (fanRelay) {
+        fanRelay->setState(ON);
+        fanRelay->holdStateUntil(millis());
+      }
       if (inverseRelay) {
         inverseRelay->forceState(OFF);
         inverseRelay->setMode(runMode == MODE_AUTO ? MODE_AUTO : MODE_OFF);
@@ -89,7 +96,7 @@ class Relay: public IODevice {
 
     void stop() {
       setState(OFF);
-      if (fanRelay->runMode == MODE_AUTO) {
+      if (fanRelay && fanRelay->runMode == MODE_AUTO) {
         fanRelay->holdStateFor(60);
         fanRelay->setState(OFF);
       }
